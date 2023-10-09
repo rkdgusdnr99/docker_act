@@ -46,10 +46,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Copy SSH private key to temporary file
+        run: echo "${{ secrets.EC2_PRIVATE_KEY }}" > ssh_key.pem
+        shell: bash
+        
+      - name: Set up SSH key
+        run: |
+          chmod 600 ssh_key.pem
+          mv ssh_key.pem ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        
       - name: Stop and remove existing container on EC2
         run: |
-          ssh -i ${{ secrets.EC2_PRIVATE_KEY }} -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker stop docker-act && docker rm docker-act"
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker stop docker-act && docker rm docker-act"
           
       - name: Pull and run Docker container on EC2
         run: |
-          ssh -i ${{ secrets.EC2_PRIVATE_KEY }} -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
