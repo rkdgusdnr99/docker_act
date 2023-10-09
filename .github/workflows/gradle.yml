@@ -39,7 +39,6 @@ jobs:
       
     - name: Build and push to DockerHub
       run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
         docker build -t rkdgusdnr99/dockeract:latest .
         docker push rkdgusdnr99/dockeract:latest
   deploy:
