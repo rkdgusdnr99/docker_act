@@ -43,16 +43,13 @@ jobs:
         docker push rkdgusdnr99/dockeract:latest
   deploy:
     needs: build
-    name: Deploy
     runs-on: ubuntu-latest
+
     steps:
-    - name: Stop and remove existing container on EC2
-      run: |
-        ssh -i mykey.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_SSH_PORT }} "docker stop docker-act && docker rm docker-act"
-      env:
-        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
-    - name: Pull and run Docker container on EC2
-      run: |
-        ssh -i mykey.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_SSH_PORT }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
-      env:
-        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+      - name: Stop and remove existing container on EC2
+        run: |
+          ssh -i ${{ secrets.EC2_PRIVATE_KEY }} -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker stop docker-act && docker rm docker-act"
+          
+      - name: Pull and run Docker container on EC2
+        run: |
+          ssh -i ${{ secrets.EC2_PRIVATE_KEY }} -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
