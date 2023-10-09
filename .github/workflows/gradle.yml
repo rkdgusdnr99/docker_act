@@ -44,3 +44,12 @@ jobs:
         docker build -t $REPO .
         docker tag $REPO:latest $NAME/$REPO:latest
         docker push $NAME/$REPO:latest
+ deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker run
+        run: |
+              docker ps -q --filter "name=docker-act" | grep -q . && docker stop "docker-act" && docker rmi "rkdgusdnr99/awsdocker"
+              docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
