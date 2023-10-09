@@ -46,11 +46,13 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
-       - name: Stop and remove existing container
-         run: |
-          docker ps -q --filter "name=docker-act" | xargs -r docker stop
-          docker ps -q -a --filter "name=docker-act" | xargs -r docker rm
-       - name: Run new container
-         run: |
-          docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract
-
+    - name: Stop and remove existing container on EC2
+      run: |
+        ssh -i mykey.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_SSH_PORT }} "docker stop docker-act && docker rm docker-act"
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+    - name: Pull and run Docker container on EC2
+      run: |
+        ssh -i mykey.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_SSH_PORT }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
