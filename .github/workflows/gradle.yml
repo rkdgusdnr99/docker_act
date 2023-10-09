@@ -36,13 +36,12 @@ jobs:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_TOKEN}}
       
-    - name: build and release to DockerHub
+    - name: build and push to DockerHub
       env:
         NAME: rkdgusdnr99
         REPO: dockeract
       run: |
-        docker build -t $REPO .
-        docker tag $REPO:latest $NAME/$REPO:latest
+        docker build -t $NAME/$REPO:latest .
         docker push $NAME/$REPO:latest
   deploy:
     needs: build
