@@ -5,7 +5,7 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 
-name: Java CI with Gradle
+name: Build and Deploy to AWS EC2
 
 on:
   push:
@@ -29,27 +29,33 @@ jobs:
       run: chmod +x gradlew
       
     - name: Build with Gradle
-      run: ./gradlew build
+      run: |
+          mkdir -p ./build/generated-snippets
+          ./gradlew build
       
     - name: Login to DockerHub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v1
       with:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_TOKEN}}
       
-    - name: Build and push to DockerHub
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/dockeract:latest
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_PRIVATE_KEY }}
+
+    - name: Deploy to AWS EC2
       run: |
-        docker build -t rkdgusdnr99/dockeract:latest .
-        docker push rkdgusdnr99/dockeract:latest
-  deploy:
-    needs: build
-    name: Deploy
-    runs-on: ubuntu-latest
-    steps:
-       - name: Stop and remove existing container
-         run: |
-          docker ps -q --filter "name=docker-act" | xargs -r docker stop
-          docker ps -q -a --filter "name=docker-act" | xargs -r docker rm
-       - name: Run new container
-         run: |
-          docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} <<EOF
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dockeract:latest
+          docker stop my-app || true
+          docker rm my-app || true
+          docker run -d --name my-app -p 80:8080 ${{ secrets.DOCKERHUB_USERNAME }}/dockeract:latest
+        EOF
