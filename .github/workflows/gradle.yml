@@ -48,9 +48,9 @@ jobs:
   deploy:
     needs: build
     name: Deploy
-    runs-on: [ self-hosted, label-development ]
+    runs-on: ubuntu-latest
     steps:
       - name: Docker run
         run: |
-              sudo docker ps -q --filter "name=docker-act" | grep -q . && sudo docker stop "docker-act" && sudo docker rmi  "rkdgusdnr99/awsdocker"
-              sudo docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
+              docker ps -q --filter "name=docker-act" | grep -q . && docker stop "docker-act" && docker rmi "rkdgusdnr99/awsdocker"
+              docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
