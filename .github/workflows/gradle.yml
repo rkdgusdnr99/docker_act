@@ -30,29 +30,27 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
       
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{secrets.DOCKERHUB_USERNAME}}
+        password: ${{secrets.DOCKERHUB_TOKEN}}
+      
+    - name: build and release to DockerHub
+      env:
+        NAME: rkdgusdnr99
+        REPO: awsdocker
+      run: |
+        docker build -t $REPO .
+        docker tag $REPO:latest $NAME/$REPO:latest
+        docker push $NAME/$REPO:latest
+
   deploy:
     needs: build
     name: Deploy
-    runs-on: self-hosted
+    runs-on: [ self-hosted, label-development ]
     steps:
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push Docker image
+      - name: Docker run
         run: |
-          docker build -t rkdgusdnr99/awsdocker:latest .
-          docker push rkdgusdnr99/awsdocker:latest
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_SSH_PORT }}
-          script: |
-            docker stop docker-act || true
-            docker rm docker-act || true
-            docker pull rkdgusdnr99/awsdocker:latest
-            docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker:latest
+              sudo docker ps -q --filter "name=docker-act" | grep -q . && sudo docker stop "docker-act" && sudo docker rmi  "rkdgusdnr99/awsdocker"
+              sudo docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
