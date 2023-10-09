@@ -24,6 +24,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'adopt'
+        
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
@@ -36,13 +37,10 @@ jobs:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_TOKEN}}
       
-    - name: build and push to DockerHub
-      env:
-        NAME: rkdgusdnr99
-        REPO: dockeract
+    - name: Build and push to DockerHub
       run: |
-        docker build -t $NAME/$REPO:latest .
-        docker push $NAME/$REPO:latest
+        docker build -t rkdgusdnr99/dockeract:latest .
+        docker push rkdgusdnr99/dockeract:latest
   deploy:
     needs: build
     name: Deploy
