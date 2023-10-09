@@ -44,3 +44,13 @@ jobs:
         docker build -t $REPO .
         docker tag $REPO:latest $NAME/$REPO:latest
         docker push $NAME/$REPO:latest
+
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: [ self-hosted, label-development ]
+    steps:
+      - name: Docker run
+        run: |
+              sudo docker ps -q --filter "name=docker-act" | grep -q . && sudo docker stop "docker-act" && sudo docker rmi  "rkdgusdnr99/awsdocker"
+              sudo docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
