@@ -39,7 +39,7 @@ jobs:
     - name: build and release to DockerHub
       env:
         NAME: rkdgusdnr99
-        REPO: awsdocker
+        REPO: dockeract
       run: |
         docker build -t $REPO .
         docker tag $REPO:latest $NAME/$REPO:latest
@@ -51,5 +51,5 @@ jobs:
     steps:
       - name: Docker run
         run: |
-              docker ps -q --filter "name=docker-act" | grep -q . && docker stop "docker-act" && docker rmi "rkdgusdnr99/awsdocker"
-              docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/awsdocker
+              docker ps -q --filter "name=docker-act" | grep -q . && docker stop "docker-act" && docker rmi "rkdgusdnr99/dockeract
+              docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract
