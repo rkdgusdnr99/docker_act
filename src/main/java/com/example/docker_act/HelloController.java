@@ -16,6 +16,6 @@ public class HelloController {
 
     @GetMapping("/")
     public String readHello() {
-        return helloService.rHello();
+        return "보여주기 " + helloService.rHello();
     }
 }
