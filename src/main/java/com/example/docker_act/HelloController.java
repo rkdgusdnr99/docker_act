@@ -1,14 +1,21 @@
 package com.example.docker_act;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/")
+@RequiredArgsConstructor
 public class HelloController {
-    @GetMapping
-    public String hello() {
-        return "진짜 성공???";
+    private final HelloService helloService;
+
+    @PostMapping("api/create")
+    public String createHello(@RequestBody HelloRequestDto requestDto) {
+        helloService.cHello(requestDto);
+        return "작성완료";
+    }
+
+    @GetMapping("/")
+    public String readHello() {
+        return helloService.rHello();
     }
 }
