@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
     @GetMapping
     public String hello() {
-        return "자동배포오..제발....";
+        return "진짜 성공???";
     }
 }
