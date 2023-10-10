@@ -32,34 +32,36 @@ jobs:
       run: ./gradlew build
       
     - name: Login to DockerHub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_TOKEN}}
       
-    - name: Build and push to DockerHub
-      run: |
-        docker build -t rkdgusdnr99/dockeract:latest .
-        docker push rkdgusdnr99/dockeract:latest
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+    # Docker 이미지 빌드
+    - name: Docker Image Build
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/dockeract .
 
-    steps:
-      - name: Copy SSH private key to temporary file
-        run: echo "${{ secrets.EC2_PRIVATE_KEY }}" > ssh_key.pem
-        shell: bash
-        
-      - name: Set up SSH key
-        run: |
-          chmod 600 ssh_key.pem
-          mv ssh_key.pem ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-        
-      - name: Stop and remove existing container on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker stop docker-act && docker rm docker-act"
-          
-      - name: Pull and run Docker container on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.EC2_SSH_PORT }} ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "docker pull rkdgusdnr99/dockeract:latest && docker run -d --name docker-act --rm -p 8080:8080 rkdgusdnr99/dockeract:latest"
+    # DockerHub Push
+    - name: DockerHub Push
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
+      
+    # EC2 인스턴스 접속 및 애플리케이션 실행
+    - name: Application Run
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+
+        script: |
+          sudo docker kill dockeract
+          sudo docker rm -f dockeract
+          sudo docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
+
+          sudo docker run -p 8080:8080 \
+          --name ${{ secrets.PROJECT_NAME }} \
+          # -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
+          # -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
+          # -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          -d ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
