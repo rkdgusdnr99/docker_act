@@ -54,14 +54,15 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
 
         script: |
-          sudo docker kill dockeract
-          sudo docker rm -f dockeract
+          sudo docker kill xenodochial_swirles
+          sudo docker rm -f xenodochial_swirles
           sudo docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
           sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
+          sudo docker run -p 8080:8080 --name xenodochial_swirles -d ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
 
-          sudo docker run -p 8080:8080 \
-          --name ${{ secrets.PROJECT_NAME }} \
+          # sudo docker run -p 8080:8080 \
+          # --name dockeract \
           # -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
           # -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
           # -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
-          -d ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
+          # -d ${{ secrets.DOCKERHUB_USERNAME }}/dockeract
